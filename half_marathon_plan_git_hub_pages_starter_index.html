@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Half Marathon Crew • 17-Week Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#0b0d10;--card:#141820;--muted:#939aa7;--acc:#66e3b1;--fg:#e8eef8}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+    header{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #202633;background:linear-gradient(180deg,#0e1116,#0b0d10)}
+    .logo{width:36px;height:36px;border-radius:10px;background:#10151c;display:grid;place-items:center;border:1px solid #222a36}
+    .logo span{font-weight:700;color:var(--acc)}
+    .title{font-size:18px;font-weight:700}
+    .wrap{max-width:1050px;margin:0 auto;padding:20px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:10px 14px;border:1px solid #273041;background:#12161d;border-radius:10px;color:#cdd6e3;cursor:pointer}
+    .tab.active{border-color:#345;outline:1.5px solid #2a3343;background:#151b24}
+    .grid{display:grid;grid-template-columns: 320px 1fr;gap:16px;margin-top:16px}
+    .card{background:var(--card);border:1px solid #242b38;border-radius:14px;padding:14px}
+    .h{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0}
+    .h h2{font-size:16px;margin:0}
+    .week-list{max-height:68vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+    .week-item{padding:10px;border:1px solid #263041;background:#11161d;border-radius:10px;cursor:pointer}
+    .week-item small{color:var(--muted)}
+    .week-item.active{outline:2px solid #314059}
+    .session{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #263041;background:#0f141a;border-radius:12px}
+    .session + .session{margin-top:8px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:center}
+    .chip{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid #2a3242;color:#c9d2df}
+    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .k{padding:10px;border:1px solid #2a3242;border-radius:12px;text-align:center}
+    .k b{display:block;font-size:18px}
+    .gallery a{display:inline-block;margin:6px 6px 0 0;padding:8px 12px;border:1px solid #2a3242;border-radius:999px;color:#d1def0;text-decoration:none}
+    .footer{margin-top:18px;color:var(--muted);font-size:12px}
+    .calendar-list{display:flex;flex-direction:column;gap:8px}
+    .divider{height:1px;background:#1f2632;margin:12px 0}
+    .progress-row{display:flex;gap:10px;align-items:center}
+    canvas{background:#0d1117;border-radius:12px;border:1px solid #232b39}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><span>🏃‍♀️</span></div>
+    <div>
+      <div class="title">Half Marathon Crew</div>
+      <div class="muted" id="subtitle">17-week program</div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab active" data-tab="plan">Plan</button>
+      <button class="tab" data-tab="calendar">Calendar</button>
+      <button class="tab" data-tab="progress">Progress</button>
+      <button class="tab" data-tab="gallery">Gallery</button>
+    </div>
+
+    <div class="grid" id="tab-plan">
+      <aside class="card">
+        <div class="h"><h2>Weeks</h2> <span class="muted" id="weekCount"></span></div>
+        <div class="week-list" id="weekList"></div>
+      </aside>
+      <main class="card">
+        <div class="h"><h2 id="weekTitle">Select a week</h2><span class="chip" id="weekBadge"></span></div>
+        <div class="kpi">
+          <div class="k"><small class="muted">Sessions</small><b id="kSessions">0</b></div>
+          <div class="k"><small class="muted">Done</small><b id="kDone">0</b></div>
+          <div class="k"><small class="muted">Completion</small><b id="kPct">0%</b></div>
+        </div>
+        <div class="divider"></div>
+        <div id="sessionList"></div>
+      </main>
+    </div>
+
+    <div class="grid" id="tab-calendar" style="display:none">
+      <aside class="card">
+        <div class="h"><h2>All sessions</h2> <span class="muted" id="totalSessions"></span></div>
+        <div class="calendar-list" id="calendarList"></div>
+      </aside>
+      <main class="card">
+        <div class="h"><h2>This month</h2><span class="muted" id="monthLabel"></span></div>
+        <div id="monthSessions"></div>
+      </main>
+    </div>
+
+    <div class="grid" id="tab-progress" style="display:none">
+      <aside class="card">
+        <div class="h"><h2>Overall</h2></div>
+        <div class="progress-row">
+          <div>
+            <div class="k"><small class="muted">Completed</small><b id="overallDone">0</b></div>
+          </div>
+          <div>
+            <div class="k"><small class="muted">Total</small><b id="overallTotal">0</b></div>
+          </div>
+          <div>
+            <div class="k"><small class="muted">% Done</small><b id="overallPct">0%</b></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <p class="muted">Chart updates as you check off sessions.</p>
+      </aside>
+      <main class="card">
+        <canvas id="chart" height="280"></canvas>
+      </main>
+    </div>
+
+    <div class="grid" id="tab-gallery" style="display:none">
+      <aside class="card">
+        <div class="h"><h2>Team media</h2></div>
+        <p class="muted">Use a shared Google Photos Album or Dropbox File Request to collect photos from phones.</p>
+        <div class="gallery">
+          <a id="galleryLink" href="#" target="_blank">Open shared album</a>
+          <a id="uploadLink" href="#" target="_blank">Upload photos</a>
+        </div>
+        <div class="footer">Set links in <code>GALLERY_ALBUM_URL</code> and <code>GALLERY_UPLOAD_URL</code> inside the script.</div>
+      </aside>
+      <main class="card">
+        <div class="h"><h2>How it works</h2></div>
+        <ol>
+          <li>Create a shared album (Google Photos) and copy its URL.</li>
+          <li>Create a <i>File Request</i> (Dropbox/Drive) for uploads; copy URL.</li>
+          <li>Paste both links into the config below, re-upload this file to GitHub.</li>
+        </ol>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ======= CONFIG =======
+    const DATA_URL = './training_plan.json'; // upload the JSON file next to index.html
+    const GROUP_NAME = 'Half Marathon Crew'; // shown in header
+    const GALLERY_ALBUM_URL = 'https://photos.app.goo.gl/your-shared-album';
+    const GALLERY_UPLOAD_URL = 'https://www.dropbox.com/request/your-file-request';
+
+    // ======= STATE =======
+    let PLAN = null;
+    let weekIndex = 0; // selected index in PLAN.weeks
+    let chart = null;
+
+    // ======= UTIL =======
+    const keyFor = (w, s) => `done:${w.week}:${s.date||''}:${s.day}`;
+    const isDone = (w, s) => localStorage.getItem(keyFor(w,s)) === '1';
+    const setDone = (w, s, val) => localStorage.setItem(keyFor(w,s), val ? '1':'0');
+
+    const fmtDate = (d) => {
+      if (!d) return '';
+      // Try to parse DD/MM/YYYY or MM/DD/YYYY; just show raw if unknown
+      const parts = (d+"").includes('-') ? (d+"").split('-') : (d+"").split('/');
+      if (parts.length === 3) {
+        let [a,b,c] = parts;
+        if (a.length === 4) { // YYYY-MM-DD
+          return `${c}/${b}/${a}`;
+        }
+        return `${a}/${b}/${c}`;
+      }
+      return d;
+    }
+
+    function renderHeader() {
+      document.getElementById('subtitle').textContent = PLAN?.plan_name || '17-week program';
+      document.querySelector('.title').textContent = GROUP_NAME;
+      document.getElementById('galleryLink').href = GALLERY_ALBUM_URL;
+      document.getElementById('uploadLink').href = GALLERY_UPLOAD_URL;
+    }
+
+    function renderWeekList() {
+      const box = document.getElementById('weekList');
+      box.innerHTML = '';
+      const total = PLAN.weeks.length;
+      document.getElementById('weekCount').textContent = `${total} weeks`;
+      PLAN.weeks.forEach((w, i) => {
+        const el = document.createElement('div');
+        el.className = 'week-item' + (i===weekIndex ? ' active' : '');
+        el.innerHTML = `<b>Week ${w.week}</b><br><small>${w.sessions?.length||0} sessions</small>`;
+        el.onclick = () => { weekIndex = i; renderWeekPanel(); updateProgress(); };
+        box.appendChild(el);
+      });
+    }
+
+    function renderWeekPanel() {
+      const w = PLAN.weeks[weekIndex];
+      document.getElementById('weekTitle').textContent = `Week ${w.week}`;
+      document.getElementById('weekBadge').textContent = `${w.sessions?.length||0} sessions`;
+      const list = document.getElementById('sessionList');
+      list.innerHTML = '';
+      let done = 0;
+      (w.sessions||[]).forEach((s, idx) => {
+        const row = document.createElement('div');
+        row.className = 'session';
+        const checked = isDone(w,s);
+        if (checked) done++;
+        row.innerHTML = `
+          <input type="checkbox" ${checked ? 'checked' : ''} />
+          <div>
+            <div class="row"><span class="chip">${s.day}</span><small class="muted">${fmtDate(s.date)}</small></div>
+            <div style="margin-top:6px">${(s.workout||'').replaceAll('\n','<br>')}</div>
+          </div>`;
+        const cb = row.querySelector('input');
+        cb.onchange = (e) => { setDone(w,s,e.target.checked); renderWeekPanel(); updateProgress(); };
+        list.appendChild(row);
+      });
+      const total = (w.sessions||[]).length;
+      document.getElementById('kSessions').textContent = total;
+      document.getElementById('kDone').textContent = done;
+      document.getElementById('kPct').textContent = total? Math.round((done/total)*100)+'%' : '0%';
+
+      // Update active class on week list
+      document.querySelectorAll('.week-item').forEach((el, i) => {
+        el.classList.toggle('active', i===weekIndex);
+      });
+    }
+
+    function renderCalendar() {
+      // Flatten sessions with dates
+      const all = [];
+      PLAN.weeks.forEach(w => (w.sessions||[]).forEach(s => all.push({week:w.week, ...s})));
+      all.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+      const list = document.getElementById('calendarList');
+      list.innerHTML = '';
+      all.forEach(s => {
+        const done = localStorage.getItem(`done:${s.week}:${s.date||''}:${s.day}`) === '1';
+        const el = document.createElement('div');
+        el.className = 'session';
+        el.innerHTML = `
+          <input type="checkbox" ${done ? 'checked' : ''} />
+          <div>
+            <div class="row"><span class="chip">Week ${s.week}</span><span class="chip">${s.day}</span><small class="muted">${fmtDate(s.date)}</small></div>
+            <div style="margin-top:6px">${(s.workout||'').replaceAll('\n','<br>')}</div>
+          </div>`;
+        const cb = el.querySelector('input');
+        cb.onchange = (e) => { localStorage.setItem(`done:${s.week}:${s.date||''}:${s.day}`, e.target.checked ? '1':'0'); renderWeekPanel(); updateProgress(); };
+        list.appendChild(el);
+      });
+      document.getElementById('totalSessions').textContent = `${all.length} sessions total`;
+
+      // Month filter (simple current month)
+      const now = new Date();
+      const month = now.getMonth()+1, year = now.getFullYear();
+      document.getElementById('monthLabel').textContent = `${year}-${String(month).padStart(2,'0')}`;
+      const monthBox = document.getElementById('monthSessions');
+      monthBox.innerHTML='';
+      all.filter(s => (s.date||'').includes(`${String(month).padStart(2,'0')}`) && (s.date||'').includes(`${year}`)).forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'session';
+        d.innerHTML = `<div class="row"><span class="chip">${s.day}</span><small class="muted">${fmtDate(s.date)}</small></div><div style="margin-top:6px">${(s.workout||'')}</div>`;
+        monthBox.appendChild(d);
+      });
+    }
+
+    function updateProgress() {
+      const weeks = PLAN.weeks;
+      let total = 0, done = 0, cumulative = [];
+      weeks.forEach(w => {
+        (w.sessions||[]).forEach(s => { total++; if (isDone(w,s)) done++; cumulative.push(done); });
+      });
+      const pct = total ? Math.round((done/total)*100) : 0;
+      document.getElementById('overallDone').textContent = done;
+      document.getElementById('overallTotal').textContent = total;
+      document.getElementById('overallPct').textContent = pct + '%';
+
+      // chart
+      const labels = cumulative.map((_,i)=> `S${i+1}`);
+      const data = {
+        labels,
+        datasets: [{
+          label: 'Cumulative completed',
+          data: cumulative,
+          tension: .25,
+          fill: false
+        }]
+      };
+      if (chart) chart.destroy();
+      const ctx = document.getElementById('chart');
+      chart = new Chart(ctx, { type: 'line', data });
+    }
+
+    function bindTabs(){
+      const tabs = document.querySelectorAll('.tab');
+      const panels = {
+        plan: document.getElementById('tab-plan'),
+        calendar: document.getElementById('tab-calendar'),
+        progress: document.getElementById('tab-progress'),
+        gallery: document.getElementById('tab-gallery'),
+      };
+      tabs.forEach(btn=>{
+        btn.onclick = ()=>{
+          tabs.forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          Object.values(panels).forEach(p=>p.style.display='none');
+          panels[btn.dataset.tab].style.display = '';
+          if (btn.dataset.tab==='calendar') renderCalendar();
+          if (btn.dataset.tab==='progress') updateProgress();
+        }
+      })
+    }
+
+    async function boot(){
+      const res = await fetch(DATA_URL);
+      PLAN = await res.json();
+      renderHeader();
+      bindTabs();
+      renderWeekList();
+      renderWeekPanel();
+      renderCalendar();
+      updateProgress();
+    }
+    boot();
+  </script>
+</body>
+</html>
